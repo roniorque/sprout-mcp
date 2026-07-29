@@ -80,7 +80,23 @@ export function registerDomainTools(server: McpServer, dataDir: string): number 
         }
       );
 
-      console.log(`  ✓ ${section.toolName}`);
+      server.prompt(
+        section.toolName,
+        section.description,
+        () => {
+          const raw = fs.readFileSync(filePath, "utf-8");
+          const data: SectionData = JSON.parse(raw);
+          return {
+            messages: [
+              {
+                role: "user" as const,
+                content: { type: "text" as const, text: formatSectionContent(data) },
+              },
+            ],
+          };
+        }
+      );
+
       count++;
     }
   }

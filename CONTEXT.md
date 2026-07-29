@@ -1,6 +1,6 @@
 # Sprout MCP
 
-**Last updated:** Wednesday, Jul 30, 2026, 10:00 AM (UTC+8)
+**Last updated:** Wednesday, Jul 30, 2026, 4:00 PM (UTC+8)
 
 A read-only MCP server that gives AI agents structured access to the full Sprout.ph API reference without hitting the live docs site at runtime.
 
@@ -11,7 +11,7 @@ The complete set of MCP tools registered on this server — one `list_library` d
 _Avoid_: registry, catalog, index (those refer to the internal `_index.json` manifest)
 
 **Domain tool**:
-A no-argument MCP tool that returns the full endpoint reference for one API section (method, URL, auth, parameters, response example). Named `get_{group}_{section}_ref`.
+A no-argument MCP tool that returns the full endpoint reference for one API section (method, URL, auth, parameters, response example). Named with a short prefix form such as `full_access_employee` or `dev_gateway_payroll` — kept under 50 characters so the combined server+tool name fits the 60-character limit enforced by MCP clients.
 _Avoid_: endpoint tool, API tool
 
 **Group**:
