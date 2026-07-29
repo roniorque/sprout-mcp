@@ -75,10 +75,8 @@ interface PmItem {
 }
 
 interface PmCollection {
-  collection?: {
-    info?: { name?: string };
-    item?: PmItem[];
-  };
+  info?: { name?: string };
+  item?: PmItem[];
 }
 
 // ── Our output types (matching src/tools/types.ts) ───────────────────────────
@@ -93,17 +91,20 @@ interface Parameter {
 
 interface Endpoint {
   method: string;
-  path: string;
+  url: string;
   title?: string;
   description?: string;
-  auth?: string;
+  auth?: { headers: string[] };
   parameters?: Parameter[];
-  responseExample?: string;
+  responseExample?: unknown;
 }
 
 interface SectionData {
   group: string;
+  groupLabel: string;
   section: string;
+  sectionLabel: string;
+  label?: string;
   endpoints: Endpoint[];
 }
 
@@ -111,8 +112,6 @@ interface SectionEntry {
   toolName: string;
   description: string;
   file: string;
-  group: string;
-  section: string;
 }
 
 interface GroupEntry {
@@ -208,10 +207,10 @@ function itemToEndpoint(item: PmItem): Endpoint | null {
 
   return {
     method: req.method?.toUpperCase() ?? "GET",
-    path: urlStr,
+    url: urlStr,
     title: item.name,
     description: getText(req.description),
-    auth: "Ocp-Apim-Subscription-Key header required",
+    auth: { headers: ["Ocp-Apim-Subscription-Key: YOUR_SUBSCRIPTION_KEY"] },
     parameters: params.length > 0 ? params : undefined,
     responseExample,
   };
@@ -260,7 +259,7 @@ async function main() {
     process.exit(1);
   }
 
-  const topItems = data?.collection?.item;
+  const topItems = data?.item;
   if (!topItems || topItems.length === 0) {
     console.error("✗ No items found in collection response. The API shape may have changed.");
     process.exit(1);
@@ -306,8 +305,11 @@ async function main() {
         }
 
         const sectionData: SectionData = {
-          group: group.name,
-          section: sub.name,
+          group: groupSlug,
+          groupLabel: group.name,
+          section: subSlug,
+          sectionLabel: sub.name,
+          label: sub.name,
           endpoints,
         };
         fs.writeFileSync(path.join(DATA_DIR, file), JSON.stringify(sectionData, null, 2), "utf-8");
@@ -316,8 +318,6 @@ async function main() {
           toolName,
           description: `${group.name} — ${sub.name} API reference`,
           file,
-          group: group.name,
-          section: sub.name,
         });
         totalTools++;
         console.log(`  ✓ ${toolName} (${endpoints.length} endpoint(s))`);
@@ -332,8 +332,11 @@ async function main() {
 
         if (endpoints.length > 0) {
           const sectionData: SectionData = {
-            group: group.name,
-            section: "General",
+            group: groupSlug,
+            groupLabel: group.name,
+            section: "general",
+            sectionLabel: "General",
+            label: "General",
             endpoints,
           };
           fs.writeFileSync(path.join(DATA_DIR, file), JSON.stringify(sectionData, null, 2), "utf-8");
@@ -341,8 +344,6 @@ async function main() {
             toolName,
             description: `${group.name} — General API reference`,
             file,
-            group: group.name,
-            section: "General",
           });
           totalTools++;
           console.log(`  ✓ ${toolName} (${endpoints.length} endpoint(s))`);
@@ -362,8 +363,11 @@ async function main() {
       const file = `${groupSlug}_${sectionSlug}.json`;
 
       const sectionData: SectionData = {
-        group: group.name,
-        section: group.name,
+        group: groupSlug,
+        groupLabel: group.name,
+        section: sectionSlug,
+        sectionLabel: group.name,
+        label: group.name,
         endpoints,
       };
       fs.writeFileSync(path.join(DATA_DIR, file), JSON.stringify(sectionData, null, 2), "utf-8");
@@ -371,8 +375,6 @@ async function main() {
         toolName,
         description: `${group.name} API reference`,
         file,
-        group: group.name,
-        section: group.name,
       });
       totalTools++;
       console.log(`  ✓ ${toolName} (${endpoints.length} endpoint(s))`);
@@ -386,7 +388,7 @@ async function main() {
   // ── 3. Write _index.json ───────────────────────────────────────────────────
   fs.writeFileSync(
     path.join(DATA_DIR, "_index.json"),
-    JSON.stringify(index, null, 2),
+    JSON.stringify({ groups: index }, null, 2),
     "utf-8"
   );
 
