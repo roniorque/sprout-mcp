@@ -1,0 +1,26 @@
+Sprout Docs Diagnostic
+URL: https://api-docs.sprout.ph/
+
+=== [class*='nav'] (1 found) ===
+  [0] tag=div id="" class="sc-fzoxnE navbarstyles__NavbarContainer-sc-4bjpr8-0 GqMIW fRIgmg" links=1
+
+=== All <a> tags (first 80) ===
+  href="/" text="Introduction" parent=DIV.sc-fzqOul WXIAt
+
+=== Body children (tag + class) ===
+  <style id="postman-critical-css" class="">
+  <div id="aether-tab-portal" class="">
+  <div id="aether-dropdown-portal" class="">
+  <div id="aether-toast-notifications__container" class="">
+  <script id="script-data-scope" class="">
+  <script id="" class="">
+  <script id="" class="">
+  <script id="" class="">
+  <script id="public-run-button-embed" class="">
+  <script id="pm-rip" class="">
+  <div id="root" class="">
+  <div id="" class="ReactModalPortal">
+
+=== Expandable elements ===
+  [aria-expanded]: 3 found
+  [class*='expand']: 1 found
