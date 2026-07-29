@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts",
     "fetch-docs": "tsx scripts/fetch-docs.ts",
+    "diagnose": "tsx scripts/diagnose.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
