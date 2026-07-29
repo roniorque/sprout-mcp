@@ -4,9 +4,11 @@ MCP server that provides a static, queryable reference library for the Sprout.ph
 
 ## How it works
 
-1. A one-time Playwright scraper (`npm run fetch-docs`) crawls `https://api-docs.sprout.ph/` and writes structured JSON files per API section to `src/data/`
+1. `npm run fetch-docs` pulls the full Postman collection JSON from the Sprout API docs site and writes structured JSON files per API section to `src/data/`
 2. The MCP server reads those files at startup and registers one tool per section
-3. `list_library` gives the agent a table of contents; domain tools (e.g. `get_hr_employees_ref`) return the full endpoint reference for a section
+3. `list_library` gives the agent a table of contents; domain tools (e.g. `get_full_access_api_employee_service_ref`) return the full endpoint reference for a section
+
+No browser or Playwright required — the docs site is a Postman Documenter page that exposes its collection via a public JSON API.
 
 ## Setup
 
@@ -16,42 +18,39 @@ MCP server that provides a static, queryable reference library for the Sprout.ph
 npm install
 ```
 
-### 2. Install Playwright browser
+### 2. Configure environment
 
-```bash
-npx playwright install chromium
+Create a `.env` file in the project root:
+
+```env
+PORT=3456
 ```
 
-### 3. Scrape the Sprout API docs
+### 3. Fetch the Sprout API docs
 
 ```bash
 npm run fetch-docs
 ```
 
-This populates `src/data/` with one JSON file per API section. Re-run whenever Sprout updates their docs.
+This populates `src/data/` with one JSON file per API section plus an `_index.json` manifest. Re-run whenever Sprout updates their docs.
 
 ### 4. Start the MCP server
 
 ```bash
-npm start
+npm run dev       # development (tsx, no build step)
+npm start         # production (requires npm run build first)
 ```
 
-The server listens on port `3000` by default. Set `PORT` to override:
+### 5. Connect your MCP client
 
-```bash
-PORT=4000 npm start
-```
-
-### 5. Connect your Claude client
-
-Add to your Claude Code settings (`.claude/settings.json`) or Claude Desktop config (`claude_desktop_config.json`):
+Add to Claude Code settings or Claude Desktop config:
 
 ```json
 {
   "mcpServers": {
     "sprout-api": {
       "type": "http",
-      "url": "http://localhost:3000/mcp"
+      "url": "http://localhost:3456/mcp"
     }
   }
 }
@@ -61,24 +60,23 @@ Add to your Claude Code settings (`.claude/settings.json`) or Claude Desktop con
 
 | Tool | Description |
 |------|-------------|
-| `list_library` | Returns a table of contents of all available domain tools |
-| `get_{group}_{section}_ref` | Returns the full endpoint reference for a section (auto-generated from scraped docs) |
+| `list_library` | Returns a table of contents of all available API sections |
+| `get_authorization_service_authorization_service_ref` | Authorization Service — token endpoints |
+| `get_full_access_api_employee_service_ref` | Full-Access API — Employee Service (52 endpoints) |
+| `get_full_access_api_hr_general_service_ref` | Full-Access API — HR General Service (18 endpoints) |
+| `get_full_access_api_time_and_attendance_service_ref` | Full-Access API — Time and Attendance Service (49 endpoints) |
+| `get_full_access_api_payroll_service_ref` | Full-Access API — Payroll Service (20 endpoints) |
+| `get_restricted_access_api_employee_service_developer_gateway_ref` | Restricted Access API — Employee Service (51 endpoints) |
+| `get_restricted_access_api_time_and_attendance_service_developer_gateway_ref` | Restricted Access API — Time and Attendance Service (49 endpoints) |
+| `get_restricted_access_api_hr_general_service_developer_gateway_ref` | Restricted Access API — HR General Service (17 endpoints) |
+| `get_restricted_access_api_payroll_service_developer_gateway_ref` | Restricted Access API — Payroll Service (20 endpoints) |
 
-### Example usage in Claude
-
-```
-You: How do I get a list of employees from Sprout?
-
-Claude: [calls list_library → sees get_hr_employees_ref → calls it]
-       GET https://api.sprout.ph/v2/hr/employees
-       Auth: Authorization: Bearer {token} | Ocp-Apim-Subscription-Key: {key}
-       ...
-```
+All API calls require the `Ocp-Apim-Subscription-Key` header with your assigned key.
 
 ## Development
 
 ```bash
-npm run dev          # run server with hot-reload via tsx
+npm run dev          # run server via tsx (reads .env)
 npm test             # run unit tests
 npm run test:watch   # watch mode
 npm run build        # compile TypeScript to dist/
@@ -90,27 +88,26 @@ When Sprout updates their API documentation:
 
 ```bash
 npm run fetch-docs
-npm start
 ```
 
-The scraper overwrites all files in `src/data/` and regenerates `_index.json`. No code changes needed — new sections are picked up automatically.
+The fetcher overwrites all files in `src/data/` and regenerates `_index.json`. No code changes needed — new sections are picked up automatically on next server start.
 
 ## Project structure
 
 ```
 sprout-mcp/
 ├── scripts/
-│   └── fetch-docs.ts       # Playwright scraper (run with npm run fetch-docs)
+│   ├── fetch-docs.ts       # Postman collection JSON fetcher
+│   └── diagnose.ts         # DOM diagnostic tool (debug helper)
 ├── src/
 │   ├── server.ts           # MCP server entry point
 │   ├── tools/
-│   │   ├── types.ts        # Shared types
+│   │   ├── types.ts        # Shared interfaces
 │   │   ├── list-library.ts # list_library tool
 │   │   └── registry.ts     # Dynamic tool registration + endpoint formatter
-│   └── data/               # Generated by scraper — not committed to git
+│   └── data/               # Generated by fetch-docs — not committed to git
 │       ├── _index.json
-│       ├── hr_employees.json
-│       └── ...
+│       └── *.json
 └── tests/
     ├── list-library.test.ts
     └── registry.test.ts
