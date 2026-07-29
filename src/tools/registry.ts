@@ -97,7 +97,6 @@ export function registerDomainTools(server: McpServer, dataDir: string): number 
         }
       );
 
-      console.log(`  ✓ ${section.toolName}`);
       count++;
     }
   }

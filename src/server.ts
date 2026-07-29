@@ -35,6 +35,14 @@ async function main() {
 
   // Stateless mode: create a new transport + server per request
   const handleMcp = async (req: express.Request, res: express.Response) => {
+    const body = req.body;
+    const ip = req.headers["x-forwarded-for"] ?? req.socket.remoteAddress;
+    const ua = req.headers["user-agent"] ?? "unknown";
+    if (body?.method === "tools/call") {
+      console.log(`[tool] ${body.params?.name} — ${ip} (${ua})`);
+    } else if (body?.method && body.method !== "initialize" && body.method !== "notifications/initialized") {
+      console.log(`[mcp] ${body.method} — ${ip} (${ua})`);
+    }
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     await createMcpServer().connect(transport);
     try {
