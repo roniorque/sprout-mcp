@@ -3,7 +3,7 @@
 **Engagement:** 0001-sprout-mcp
 **Source:** SEC-001 (Phase 8 security audit)
 **Severity:** High
-**Status:** open
+**Status:** verified
 
 ## Problem
 
@@ -27,7 +27,17 @@ Expected: `npm audit` reports 0 critical, 0 high. All 8 tests pass.
 
 ## Acceptance criteria
 
-- [ ] `vitest` in `package.json` devDependencies is `^4.1.10` or higher
-- [ ] `npm audit` shows 0 critical, 0 high vulnerabilities
-- [ ] `npm test` passes (8/8)
-- [ ] No `vitest.config.ts` API changes needed (v4 is backward-compatible for this project's usage)
+- [x] `vitest` in `package.json` devDependencies is `^4.1.10` or higher
+- [x] `npm audit` shows 0 critical, 0 high vulnerabilities
+- [x] `npm test` passes (8/8)
+- [x] No `vitest.config.ts` API changes needed (v4 is backward-compatible for this project's usage)
+
+## Verification
+
+```
+npm install -D vitest@^4.1.10  →  added 15, removed 17, changed 16 — found 0 vulnerabilities
+npm test                        →  vitest v4.1.10, 8 passed (8), 2 files
+npm audit                       →  found 0 vulnerabilities
+```
+
+**behavior_changed:** no (devDependency upgrade only — no production code touched)
