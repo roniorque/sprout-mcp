@@ -3,3 +3,6 @@ dist/
 src/data/
 .env
 *.js.map
+diagnostic-*.html
+diagnostic-*.txt
+debug-response-*.txt

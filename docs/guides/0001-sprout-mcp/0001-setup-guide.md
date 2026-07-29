@@ -1,6 +1,6 @@
 # Guide 0001: Sprout MCP Server — Setup & Usage
 
-**Last updated:** Tuesday, Jul 29, 2026, 6:30 PM (UTC+8)
+**Last updated:** Wednesday, Jul 30, 2026, 10:00 AM (UTC+8)
 
 ## First-time setup
 
@@ -8,14 +8,15 @@
 # 1. Install dependencies
 npm install
 
-# 2. Install Playwright Chromium (one-time)
-npx playwright install chromium
+# 2. Configure port (create .env in project root)
+echo PORT=3456 > .env
 
-# 3. Scrape the Sprout API docs
+# 3. Fetch the Sprout API docs
 npm run fetch-docs
 
 # 4. Start the server
-npm start
+npm run dev        # development
+npm start          # production (requires npm run build first)
 ```
 
 ## Connect to Claude
@@ -63,11 +64,13 @@ No code changes needed. New sidebar sections are picked up automatically.
 
 ## Custom port
 
-```bash
-PORT=4000 npm start
+Set `PORT` in your `.env` file:
+
+```env
+PORT=3456
 ```
 
-Update your Claude client config to match.
+Or pass inline: `PORT=4000 npm start`. Update your Claude client config URL to match.
 
 ## Development
 
@@ -80,8 +83,8 @@ npm run build        # compile to dist/
 
 ## Troubleshooting
 
-**`npm run fetch-docs` exits with "No sections found"**
-The Sprout docs site may have changed its HTML structure. The scraper uses multiple fallback strategies for the sidebar, but a major redesign may require updating the selector logic in `scripts/fetch-docs.ts`.
+**`npm run fetch-docs` fails with HTTP error or "No items found"**
+The Sprout docs Postman collection API URL may have changed. Check the `<link rel="prefetch">` in the page source of `https://api-docs.sprout.ph/` for the current collection endpoint and update `COLLECTION_URL` in `scripts/fetch-docs.ts`. Run `npx tsx scripts/debug-api.ts` to inspect the live API response shape.
 
 **Server starts but no domain tools are registered**
 `src/data/` is empty or `_index.json` is missing — run `npm run fetch-docs` first.
