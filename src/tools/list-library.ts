@@ -30,12 +30,18 @@ export function buildListLibraryContent(dataDir: string): string {
 }
 
 export function registerListLibrary(server: McpServer, dataDir: string): void {
-  server.tool(
-    "list_library",
-    "Returns a directory of all available Sprout.ph API reference tools. Call this first when you don't know which domain tool to use.",
-    {},
-    async () => ({
-      content: [{ type: "text" as const, text: buildListLibraryContent(dataDir) }],
-    })
-  );
+  const description = "Returns a directory of all available Sprout.ph API reference tools. Call this first when you don't know which domain tool to use.";
+
+  server.tool("list_library", description, {}, async () => ({
+    content: [{ type: "text" as const, text: buildListLibraryContent(dataDir) }],
+  }));
+
+  server.prompt("list_library", description, () => ({
+    messages: [
+      {
+        role: "user" as const,
+        content: { type: "text" as const, text: buildListLibraryContent(dataDir) },
+      },
+    ],
+  }));
 }

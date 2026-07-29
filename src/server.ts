@@ -9,28 +9,34 @@ import path from "path";
 const PORT = process.env.PORT ?? "3000";
 export const DATA_DIR = path.join(process.cwd(), "src", "data");
 
+function createMcpServer(): McpServer {
+  const server = new McpServer({ name: "sprout-api", version: "1.0.0" });
+  registerListLibrary(server, DATA_DIR);
+  registerDomainTools(server, DATA_DIR);
+  return server;
+}
+
 async function main() {
   console.log("Sprout MCP server starting…");
 
-  const server = new McpServer({
-    name: "sprout-api",
-    version: "1.0.0",
-  });
-
-  registerListLibrary(server, DATA_DIR);
-  const count = registerDomainTools(server, DATA_DIR);
+  // Log tool count once
+  const probe = new McpServer({ name: "probe", version: "1.0.0" });
+  registerListLibrary(probe, DATA_DIR);
+  const count = registerDomainTools(probe, DATA_DIR);
   console.log(`Registered ${count} domain tool(s) + list_library`);
 
   const app = express();
   app.use(express.json());
 
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
+  // Tell Claude Code this server needs no OAuth
+  app.get("/.well-known/oauth-protected-resource", (_req, res) => {
+    res.json({ authorization_servers: [] });
   });
 
-  await server.connect(transport);
-
-  app.post("/mcp", async (req, res) => {
+  // Stateless mode: create a new transport + server per request
+  const handleMcp = async (req: express.Request, res: express.Response) => {
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    await createMcpServer().connect(transport);
     try {
       await transport.handleRequest(req, res, req.body);
     } catch (err) {
@@ -43,27 +49,11 @@ async function main() {
         });
       }
     }
-  });
+  };
 
-  app.get("/mcp", (_req, res) => {
-    res.writeHead(405).end(
-      JSON.stringify({
-        jsonrpc: "2.0",
-        error: { code: -32000, message: "Method not allowed." },
-        id: null,
-      })
-    );
-  });
-
-  app.delete("/mcp", (_req, res) => {
-    res.writeHead(405).end(
-      JSON.stringify({
-        jsonrpc: "2.0",
-        error: { code: -32000, message: "Method not allowed." },
-        id: null,
-      })
-    );
-  });
+  app.post("/mcp", handleMcp);
+  app.get("/mcp", handleMcp);
+  app.delete("/mcp", handleMcp);
 
   app.listen(parseInt(PORT), () => {
     console.log(`Sprout MCP server listening on port ${PORT}`);
